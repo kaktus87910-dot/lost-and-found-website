@@ -1,0 +1,7 @@
+/build/
+/models/*.onnx
+/lost_found_data/
+__pycache__/
+.env
+.env.*
+/render_app/.env

@@ -1,31 +1,45 @@
-# Lost & Found — GitHub Pages Demo
+# Lost & Found website
 
-A static, browser-only demonstration of a Lost & Found site. It supports creating
-lost/found reports, attaching a photo, choosing an item category and color,
-reviewing possible opposite-type matches, editing reports, and confirming or
-deleting reports.
+This repository contains two versions of the project:
 
-## Important limitations
+- **GitHub Pages demo:** a static browser-only sample at
+  `https://kaktus87910-dot.github.io/lost-and-found-website/`. Reports are kept
+  in that browser's local storage. Item and color are selected manually; this
+  version does not run AI or share data with other browsers.
+- **Render server app:** the `render_app/` package provides a Python website
+  with public reports, OpenCV DNN object/color detection, SQLite storage, and
+  administrator-only report edits, deletes, and match confirmation.
 
-This GitHub Pages version has no server or shared database. Reports and photos
-are saved only in the current browser's `localStorage`; they are not visible to
-other people or devices and can be removed when browser storage is cleared.
-Categories are selected manually. GitHub Pages cannot run the project's Python,
-OpenCV/YOLO model, C++ application, or SQLite database, so this demo does not
-perform AI object recognition and is not the full local application.
+## Deploy the server app to Render
 
-Do not enter sensitive personal information or upload photos you do not have
-permission to use. This public repository contains only the static website and
-its deployment workflow, not local reports, photos, model weights, or database
-files.
+`render.yaml` is a Render Blueprint. Connect this repository to Render and
+create the Blueprint. It requests a paid Starter web service and a 1 GB
+persistent disk; review the current price before approving. Configure a strong
+administrator password hash when prompted. Generate one locally, without
+sharing the plaintext password:
 
-## Deploy
+```sh
+python3 -m pip install -r render_app/requirements.txt
+python3 render_app/server.py --hash-password
+```
 
-The included GitHub Actions workflow deploys the `pages/` directory. In the
-repository, open **Settings → Pages**, choose **GitHub Actions** as the build
-and deployment source, then run the **Deploy static Lost & Found demo** workflow
-or push a change to `pages/`.
+Set the generated `pbkdf2_sha256$...` string as `ADMIN_PASSWORD_HASH` in Render.
+Render generates `SESSION_SECRET`. Never put either secret in GitHub.
 
-The site URL will be:
+### Object detection model requirement
 
-`https://kaktus87910-dot.github.io/lost-and-found-website/`
+The model weights are deliberately not included. The existing local model's
+source repository does not declare a license, and the upstream YOLOv8 model
+card declares AGPL-3.0. Review the exact terms before using or redistributing
+any weights. To enable inference, provision a compatible, rights-cleared model
+at `/var/data/models/yolov8n.onnx` on the Render persistent disk. Until then,
+the server reports detection as unavailable and rejects report creation rather
+than inventing results.
+
+Reports and photos submitted to the Render app are public. Do not upload
+sensitive personal information. The persistent disk stores the SQLite database
+and images; arrange protected backups and test restores. This deployment is a
+single-instance prototype, not a fully managed production service.
+
+See [`render_app/README.md`](render_app/README.md) for backend details. The
+GitHub Pages workflow deploys the separate `pages/` static demo.
