@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0c1628">
+  <meta name="description" content="A browser-only Lost & Found demo. Reports stay in your browser and are not shared with other visitors.">
+  <title>Found — Lost &amp; Found Demo</title>
+  <script>
+    try {
+      const savedTheme = localStorage.getItem("lf-pages-theme");
+      if (savedTheme === "light" || savedTheme === "dark") {
+        document.documentElement.dataset.theme = savedTheme;
+      }
+    } catch {}
+  </script>
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./" aria-label="Found home">
+      <span class="brand-mark" aria-hidden="true">F</span>
+      <span>Found<span class="brand-dot">.</span></span>
+    </a>
+    <div class="header-actions">
+      <span class="local-badge"><span class="status-dot"></span> Browser-only demo</span>
+      <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch to light theme" aria-pressed="false">
+        <span id="theme-icon" aria-hidden="true">☾</span>
+        <span id="theme-label">Light theme</span>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">LOST &amp; FOUND · STATIC DEMO</p>
+        <h1>Let lost things<br>find their way home.</h1>
+        <p class="hero-text">Create a local report, browse possible matches, and try the flow right in your browser.</p>
+        <a class="button button-light" href="#new-report">Create a report <span aria-hidden="true">↓</span></a>
+      </div>
+      <div class="hero-illustration" aria-hidden="true">
+        <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div>
+        <div class="hero-card card-back"><span>FOUND</span><div class="mini-object"></div></div>
+        <div class="hero-card card-front"><span>LOST</span><div class="mini-phone"></div><b>Looks like a match!</b></div>
+        <span class="spark spark-one">✳</span><span class="spark spark-two">✦</span>
+      </div>
+    </section>
+
+    <aside class="notice notice-demo" aria-label="Static demo limitations">
+      <span class="notice-icon" aria-hidden="true">i</span>
+      <p><strong>Static demo — no AI or shared database.</strong> GitHub Pages cannot run the local Python/OpenCV/YOLO server. Choose the item category and main color yourself. Reports and photos are stored only in this browser and are not visible to other visitors or devices.</p>
+    </aside>
+
+    <section class="stats-row" aria-live="polite">
+      <div class="stat"><strong id="open-count">0</strong><span>open reports in this browser</span></div>
+      <div class="stat"><strong>79</strong><span>item categories</span></div>
+      <div class="privacy-note"><span class="lock-icon" aria-hidden="true">⌑</span><span>Nothing is uploaded to an AI service.<br>Your demo data stays in this browser.</span></div>
+    </section>
+
+    <section class="content-grid">
+      <section class="form-card" id="new-report">
+        <div class="section-heading">
+          <div><p class="eyebrow">START HERE</p><h2>What happened?</h2></div>
+          <span class="step-number">01</span>
+        </div>
+
+        <div class="segmented" role="group" aria-label="Report type">
+          <button type="button" class="segment active" data-kind="lost"><span aria-hidden="true">↗</span> I lost something</button>
+          <button type="button" class="segment" data-kind="found"><span aria-hidden="true">↙</span> I found something</button>
+        </div>
+
+        <form id="report-form">
+          <label class="field-label" for="object-class">Item category</label>
+          <select id="object-class" required>
+            <option value="">Choose a category</option>
+          </select>
+          <p class="field-hint">Choose the closest available category. These are COCO model labels, not AI results.</p>
+
+          <label class="field-label" for="description">Describe distinguishing details</label>
+          <textarea id="description" maxlength="1000" rows="3" placeholder="For example: navy-blue case with a cat sticker…"></textarea>
+          <div class="input-meta"><span>More detail makes an item easier to identify.</span><span id="char-count">0 / 1000</span></div>
+
+          <label class="field-label" for="main-color">Main color</label>
+          <div class="color-field">
+            <input id="main-color" type="color" value="#3568b8" aria-label="Choose the main color">
+            <span id="color-name">blue</span>
+          </div>
+
+          <label class="field-label photo-label" for="photo-file">Photo <span class="optional">(optional)</span></label>
+          <div class="photo-tools">
+            <button class="button button-secondary" id="camera-start" type="button"><span aria-hidden="true">◎</span> Open camera</button>
+            <label class="button button-secondary file-button" for="photo-file"><span aria-hidden="true">＋</span> Choose photo</label>
+            <input id="photo-file" type="file" accept="image/*" capture="environment" hidden>
+          </div>
+          <div id="camera-wrap" class="camera-wrap" hidden>
+            <video id="camera-video" autoplay playsinline muted aria-label="Camera preview"></video>
+            <button id="camera-shot" type="button" class="button button-primary" disabled>Take photo</button>
+          </div>
+          <div id="photo-preview-wrap" class="photo-preview-wrap" hidden>
+            <img id="photo-preview" alt="Preview of the item photo">
+            <button id="photo-remove" class="remove-photo" type="button" aria-label="Remove photo">×</button>
+            <span class="photo-ready">Photo ready</span>
+          </div>
+          <p class="field-hint">Photos are resized and saved in this browser only.</p>
+          <button class="button button-primary submit-button" id="submit-report" type="submit">
+            <span id="submit-label">Save report and find matches</span><span aria-hidden="true">→</span>
+          </button>
+          <p id="form-message" class="form-message" role="status" aria-live="polite"></p>
+        </form>
+      </section>
+
+      <section class="results-column">
+        <section class="matches-card">
+          <div class="section-heading">
+            <div><p class="eyebrow">MATCH SEARCH</p><h2>Possible matches</h2></div>
+            <span class="step-number">02</span>
+          </div>
+          <div id="matches-empty" class="empty-state">
+            <div class="empty-icon" aria-hidden="true">⌕</div>
+            <strong>Matches will appear here</strong>
+            <span>Save a report to compare it with opposite-type reports stored in this browser.</span>
+          </div>
+          <div id="matches-list" class="matches-list"></div>
+          <p class="matching-note">Matches use the selected category, color, and description. The score is a simple demo heuristic—not AI, a probability, or proof of ownership.</p>
+        </section>
+
+        <section class="reports-card">
+          <div class="section-heading compact-heading">
+            <div><p class="eyebrow">THIS BROWSER</p><h2>Recent reports</h2></div>
+            <button class="refresh-button" id="refresh-reports" type="button" aria-label="Refresh reports">↻</button>
+          </div>
+          <div id="reports-list" class="reports-list"></div>
+        </section>
+      </section>
+    </section>
+
+    <footer><span>Found<span class="brand-dot">.</span></span><span>Static demo · Data is local to this browser</span></footer>
+  </main>
+</body>
+</html>
